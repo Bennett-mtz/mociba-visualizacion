@@ -10,6 +10,11 @@ Autor: **Ing. Raymundo Bennett Martínez Terán** · Docente: Ricardo Emmanuel R
 >
 > **Audiencia:** público general.
 
+## Ver en línea (sin instalar nada)
+
+- Visualización interactiva: https://bennett-mtz.github.io/mociba-visualizacion/figures/avance3/V2_interactiva_mapa_ranking_entidades.html
+- Notebook ejecutado: https://bennett-mtz.github.io/mociba-visualizacion/notebooks/MOCIBA_proyecto.html
+
 ## Datos
 
 | | |
@@ -61,7 +66,7 @@ mociba-visualizacion/
 Requiere Python 3.10 o superior.
 
 ```bash
-git clone <URL-del-repositorio>
+git clone https://github.com/Bennett-mtz/mociba-visualizacion.git
 cd mociba-visualizacion
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
