@@ -1,0 +1,64 @@
+// ===== Medidas para Power BI — Proyecto MOCIBA =====
+// Crear en la tabla Prevalencia (Modelado > Nueva medida), una por una.
+
+Prevalencia % =
+DIVIDE ( SUM ( Prevalencia[victimas_exp] ), SUM ( Prevalencia[usuarios_exp] ) )
+
+Víctimas (millones) =
+SUM ( Prevalencia[victimas_exp] ) / 1e6
+
+Usuarios (millones) =
+SUM ( Prevalencia[usuarios_exp] ) / 1e6
+
+Brecha M-H (pp) =
+VAR m = CALCULATE ( [Prevalencia %], Prevalencia[sexo] = "Mujeres" )
+VAR h = CALCULATE ( [Prevalencia %], Prevalencia[sexo] = "Hombres" )
+RETURN ( m - h ) * 100
+
+// Prevalencia nacional del año filtrado, ignorando entidad/sexo/edad/localidad (para la línea de referencia)
+Prevalencia nacional % =
+CALCULATE ( [Prevalencia %], REMOVEFILTERS ( Entidades ),
+            REMOVEFILTERS ( Prevalencia[sexo] ), REMOVEFILTERS ( Prevalencia[grupo_edad] ),
+            REMOVEFILTERS ( Prevalencia[dominio] ) )
+
+Cambio vs año anterior (pp) =
+VAR a = SELECTEDVALUE ( Prevalencia[anio] )
+VAR prev = CALCULATE ( [Prevalencia %], Prevalencia[anio] = a - 1 )
+RETURN IF ( ISBLANK ( prev ), BLANK (), ( [Prevalencia %] - prev ) * 100 )
+
+Muestra (personas) =
+SUM ( Prevalencia[n_muestra] )
+
+// ----- Tabla Situaciones (2025) -----
+Situación % =
+DIVIDE ( SUM ( Situaciones[casos_exp] ), SUM ( Situaciones[usuarios_exp] ) )
+
+// ----- Tabla IC_Entidad (intervalos calculados en Python; para el tooltip) -----
+// Grupo que corresponde al segmentador de sexo: si no hay uno solo seleccionado, se usa "Total"
+Grupo IC =
+IF ( HASONEVALUE ( Prevalencia[sexo] ), VALUES ( Prevalencia[sexo] ), "Total" )
+
+IC prev % =
+VAR g = [Grupo IC]
+VAR a = SELECTEDVALUE ( Prevalencia[anio], 2025 )
+RETURN CALCULATE ( AVERAGE ( IC_Entidad[prev_python] ), IC_Entidad[grupo] = g, IC_Entidad[anio] = a ) / 100
+
+IC inferior % =
+VAR g = [Grupo IC]
+VAR a = SELECTEDVALUE ( Prevalencia[anio], 2025 )
+RETURN CALCULATE ( AVERAGE ( IC_Entidad[ic_inf] ), IC_Entidad[grupo] = g, IC_Entidad[anio] = a ) / 100
+
+IC superior % =
+VAR g = [Grupo IC]
+VAR a = SELECTEDVALUE ( Prevalencia[anio], 2025 )
+RETURN CALCULATE ( AVERAGE ( IC_Entidad[ic_sup] ), IC_Entidad[grupo] = g, IC_Entidad[anio] = a ) / 100
+
+IC muestra =
+VAR g = [Grupo IC]
+VAR a = SELECTEDVALUE ( Prevalencia[anio], 2025 )
+RETURN CALCULATE ( SUM ( IC_Entidad[n] ), IC_Entidad[grupo] = g, IC_Entidad[anio] = a )
+
+IC comparación =
+VAR g = [Grupo IC]
+VAR a = SELECTEDVALUE ( Prevalencia[anio], 2025 )
+RETURN CALCULATE ( SELECTEDVALUE ( IC_Entidad[vs_nacional] ), IC_Entidad[grupo] = g, IC_Entidad[anio] = a )

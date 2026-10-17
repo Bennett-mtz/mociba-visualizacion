@@ -1,0 +1,18 @@
+{
+  "name": "MOCIBA",
+  "dataColors": ["#eb6834", "#4a3aa7", "#52514e", "#256abf", "#6da7ec", "#0d366b", "#9ec5f4", "#b5b4ae"],
+  "background": "#fcfcfb",
+  "foreground": "#0b0b0b",
+  "tableAccent": "#256abf",
+  "good": "#6da7ec",
+  "bad": "#0d366b",
+  "neutral": "#b5b4ae",
+  "minimum": "#cde2fb",
+  "center": "#3987e5",
+  "maximum": "#0d366b",
+  "textClasses": {
+    "title": { "fontFace": "Segoe UI Semibold", "fontSize": 13, "color": "#0b0b0b" },
+    "label": { "fontFace": "Segoe UI", "fontSize": 10, "color": "#52514e" },
+    "callout": { "fontFace": "Segoe UI Semibold", "fontSize": 26, "color": "#0b0b0b" }
+  }
+}
