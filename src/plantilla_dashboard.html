@@ -1,0 +1,487 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ciberacoso en México · MOCIBA</title>
+<meta name="description" content="Dashboard final: prevalencia de ciberacoso en México por sexo, edad, tipo de situación y entidad (MOCIBA, INEGI, 2019–2025).">
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #f6f5f2; --panel: #ffffff; --ink: #0b0b0b; --ink2: #52514e; --muted: #8a8984;
+    --line: #e4e3df; --chip: #ecebe6; --grid: #eeede9;
+    --muj: #eb6834; --hom: #9a9893; --link: #c9c8c2;
+    --up: #184f95; --down: #86b6ef; --ns: #d3d2cc; --focus: #256abf;
+    --band-m: rgba(235,104,52,.16); --band-h: rgba(154,152,147,.18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #121211; --panel: #1b1b1a; --ink: #f2f1ed; --ink2: #c3c2bc; --muted: #8f8e88;
+      --line: #2f2e2b; --chip: #262523; --grid: #262523;
+      --muj: #f07a49; --hom: #85847e; --link: #4a4945;
+      --up: #9ec5f4; --down: #2a5f9e; --ns: #3c3b38; --focus: #6da7ec;
+      --band-m: rgba(240,122,73,.20); --band-h: rgba(133,132,126,.22);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #121211; --panel: #1b1b1a; --ink: #f2f1ed; --ink2: #c3c2bc; --muted: #8f8e88;
+    --line: #2f2e2b; --chip: #262523; --grid: #262523;
+    --muj: #f07a49; --hom: #85847e; --link: #4a4945;
+    --up: #9ec5f4; --down: #2a5f9e; --ns: #3c3b38; --focus: #6da7ec;
+    --band-m: rgba(240,122,73,.20); --band-h: rgba(133,132,126,.22);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); }
+  body { font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+  main { max-width: 1320px; margin: 0 auto; padding: 22px 16px 36px; }
+
+  .kicker { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+  h1 { font-size: clamp(1.35rem, 2.5vw, 2rem); line-height: 1.18; margin: 0 0 6px; letter-spacing: -0.015em; max-width: 30ch; }
+  h1 em { font-style: normal; color: var(--muj); }
+  .lede { color: var(--ink2); margin: 0 0 16px; max-width: 80ch; }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; padding: 10px 0 14px;
+              border-top: 1px solid var(--line); margin-bottom: 4px; }
+  .ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ctl-label { font-size: 11.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+  .seg { display: inline-flex; background: var(--chip); border-radius: 9px; padding: 3px; flex-wrap: wrap; }
+  .seg button { border: 0; background: transparent; color: var(--ink2); font: inherit; font-size: 14px;
+                padding: 5px 10px; border-radius: 7px; cursor: pointer; font-variant-numeric: tabular-nums; }
+  .seg button:hover { color: var(--ink); }
+  .seg button[aria-pressed="true"] { background: var(--panel); color: var(--ink); font-weight: 600;
+                                     box-shadow: 0 1px 2px rgba(0,0,0,.14); }
+  .seg button:focus-visible, select:focus-visible, .reset:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+  select { font: inherit; font-size: 14px; color: var(--ink); background: var(--chip); border: 0; border-radius: 8px;
+           padding: 6px 10px; cursor: pointer; max-width: 210px; }
+  .reset { border: 0; background: none; color: var(--ink2); font: inherit; font-size: 13.5px; cursor: pointer;
+           text-decoration: underline; text-underline-offset: 3px; padding: 4px 2px; }
+  .spacer { flex: 1; }
+
+  .grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 14px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px 8px; min-width: 0; }
+  .c4 { grid-column: span 4; } .c6 { grid-column: span 6; } .c8 { grid-column: span 8; } .c12 { grid-column: span 12; }
+  .card h2 { font-size: 16px; line-height: 1.3; margin: 0 0 2px; font-weight: 650; }
+  .card .q { font-size: 12px; color: var(--muted); margin: 0 0 6px; text-transform: uppercase; letter-spacing: .06em; }
+  .card .hint { font-size: 12.5px; color: var(--muted); margin: 2px 0 4px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12.5px; color: var(--ink2); margin: 4px 0 2px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+  .legend i.sq { border-radius: 3px; width: 12px; height: 12px; }
+
+  /* Tarjeta principal: el insight más importante, lo primero que se ve */
+  .hero { display: flex; flex-direction: column; padding: 18px 20px 16px; }
+  .hero .q { margin-bottom: 4px; }
+  .hero .big { font-size: clamp(3.6rem, 7vw, 5.6rem); font-weight: 750; line-height: .95; letter-spacing: -0.035em;
+               font-variant-numeric: tabular-nums; margin: 6px 0 4px; }
+  .hero .big small { font-size: .42em; font-weight: 600; letter-spacing: 0; color: var(--ink2); }
+  .hero .phrase { font-size: 18px; font-weight: 600; margin: 0 0 2px; }
+  .hero .ctx { color: var(--ink2); font-size: 14px; margin: 0 0 14px; }
+  .hero .peak { font-size: 14px; color: var(--ink); margin: 0 0 14px; padding: 8px 10px; border-left: 3px solid var(--muj); background: var(--chip); border-radius: 0 8px 8px 0; }
+  .hero .peak:empty { display: none; }
+  .hero .sub { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top: 1px solid var(--line); padding-top: 12px; margin-top: auto; }
+  .hero .sub div { min-width: 0; }
+  .hero .sub .v { font-size: 20px; font-weight: 650; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 6px; }
+  .hero .sub .v i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+  .hero .sub .l { font-size: 12.5px; color: var(--ink2); }
+  .hero .yoy { grid-column: 1 / -1; font-size: 13px; color: var(--ink2); }
+
+  #ch-serie { height: 300px; } #ch-edad { height: 300px; } #ch-situ { height: 360px; } #ch-rank { height: 300px; }
+
+  .warn { font-size: 12.5px; color: var(--ink2); background: var(--chip); border-radius: 8px; padding: 6px 10px; margin: 4px 0 6px; display: none; }
+  .warn.show { display: block; }
+
+  /* Vista técnica: detalle metodológico visible solo cuando se activa */
+  .tech { display: none; }
+  body.tecnica .tech { display: block; }
+  .tech-line { font-size: 12.5px; color: var(--ink2); font-variant-numeric: tabular-nums; margin: 4px 0 0; }
+  .metodo { grid-column: span 12; }
+  .metodo ul { margin: 6px 0 8px; padding-left: 18px; color: var(--ink2); font-size: 13.5px; columns: 2; column-gap: 32px; }
+  .metodo li { margin-bottom: 5px; break-inside: avoid; }
+
+  footer { color: var(--muted); font-size: 12px; margin-top: 16px; display: flex; flex-wrap: wrap; gap: 6px 18px; }
+  footer a { color: var(--ink2); }
+
+  @media (max-width: 980px) {
+    .c4, .c6, .c8 { grid-column: span 12; }
+    .metodo ul { columns: 1; }
+  }
+  @media (max-width: 560px) {
+    #ch-rank { height: 620px; }
+    .spacer { display: none; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <p class="kicker">Ciberacoso en México · MOCIBA (INEGI) 2019–2025</p>
+  <h1>1 de cada 5 personas que usan internet vivió ciberacoso en 2025, y <em>las mujeres jóvenes</em> son las más expuestas</h1>
+  <p class="lede">Personas de 12 años y más que usaron internet y vivieron al menos una situación de ciberacoso en los últimos
+    12 meses. Usa los filtros o haz clic en una entidad del ranking para ver su detalle.</p>
+
+  <div class="controls" role="region" aria-label="Filtros">
+    <div class="ctl"><span class="ctl-label">Año</span><span class="seg" id="f-anio" role="group" aria-label="Año"></span></div>
+    <div class="ctl"><span class="ctl-label">Localidad</span><span class="seg" id="f-dom" role="group" aria-label="Localidad"></span></div>
+    <div class="ctl"><span class="ctl-label">Entidad</span><select id="f-ent" aria-label="Entidad"></select></div>
+    <button class="reset" id="reset" type="button">Restablecer</button>
+    <span class="spacer"></span>
+    <div class="ctl"><span class="ctl-label">Vista</span><span class="seg" id="f-vista" role="group" aria-label="Vista"></span></div>
+  </div>
+
+  <div class="grid">
+    <!-- 1. Insight principal -->
+    <section class="card hero c4" aria-live="polite">
+      <p class="q" id="h-scope">Nacional · 2025</p>
+      <div class="big" id="h-big">–</div>
+      <p class="phrase" id="h-phrase">–</p>
+      <p class="ctx" id="h-ctx">–</p>
+      <p class="peak" id="h-peak"></p>
+      <div class="sub">
+        <div><div class="v"><i style="background:var(--muj)"></i><span id="h-m">–</span></div><div class="l">Mujeres</div></div>
+        <div><div class="v"><i style="background:var(--hom)"></i><span id="h-h">–</span></div><div class="l">Hombres</div></div>
+        <div class="yoy" id="h-yoy"></div>
+      </div>
+      <p class="tech tech-line" id="h-tech"></p>
+    </section>
+
+    <!-- 2. Tendencia -->
+    <section class="card c8">
+      <p class="q">¿Está bajando?</p>
+      <h2 id="t-serie">–</h2>
+      <div class="legend"><span><i style="background:var(--muj)"></i>Mujeres</span><span><i style="background:var(--hom)"></i>Hombres</span></div>
+      <div id="ch-serie"></div>
+      <p class="tech tech-line">Banda: IC 95 %. En 2019 el cuestionario captaba 10 situaciones (13 desde 2020/2021), por eso ese año no se compara directamente.</p>
+    </section>
+
+    <!-- 3. Edad y sexo -->
+    <section class="card c6">
+      <p class="q">¿A quién afecta más?</p>
+      <h2 id="t-edad">–</h2>
+      <div class="legend"><span><i style="background:var(--muj)"></i>Mujeres</span><span><i style="background:var(--hom)"></i>Hombres</span></div>
+      <div class="warn" id="w-edad"></div>
+      <div id="ch-edad"></div>
+      <p class="tech tech-line">Barras de error: IC 95 %. Puntos huecos: coeficiente de variación &gt; 30 % (estimación poco confiable según criterio del INEGI).</p>
+    </section>
+
+    <!-- 4. Tipo de situación -->
+    <section class="card c6">
+      <p class="q">¿Qué forma toma? · 2025</p>
+      <h2 id="t-situ">–</h2>
+      <div class="legend"><span><i style="background:var(--muj)"></i>Mujeres</span><span><i style="background:var(--hom)"></i>Hombres</span>
+        <span style="color:var(--ink)"><span><b>Negritas</b>&nbsp;= acoso de tipo sexual</span></span></div>
+      <div class="warn" id="w-situ"></div>
+      <div id="ch-situ"></div>
+      <p class="tech tech-line">% de todas las personas usuarias que vivieron cada situación (una persona puede vivir varias). Detalle por situación: levantamiento 2025.</p>
+    </section>
+
+    <!-- 5. Entidades -->
+    <section class="card c12">
+      <p class="q">¿Dónde?</p>
+      <h2 id="t-rank">–</h2>
+      <div class="legend">
+        <span><i class="sq" style="background:var(--up)"></i>Por arriba del nacional</span>
+        <span><i class="sq" style="background:var(--ns)"></i>Sin diferencia significativa</span>
+        <span><i class="sq" style="background:var(--down)"></i>Por debajo del nacional</span>
+      </div>
+      <p class="hint">Haz clic en una barra para filtrar todo el tablero por esa entidad (clic de nuevo para volver a Nacional).</p>
+      <div id="ch-rank"></div>
+      <p class="tech tech-line">Clasificación con la prueba de diferencia entidad − nacional al 95 % (varianza por linealización que incluye la covarianza entre ambos dominios).</p>
+    </section>
+
+    <!-- 6. Nota metodológica (vista técnica) -->
+    <section class="card metodo tech">
+      <p class="q">Nota metodológica</p>
+      <ul id="metodo"></ul>
+    </section>
+  </div>
+
+  <footer>
+    <span>Fuente: INEGI, Módulo sobre Ciberacoso (MOCIBA) 2019–2025, microdatos.</span>
+    <span>Elaboración: Ing. Raymundo Bennett Martínez Terán · Visualización de Datos, MIA TecNM / IT Aguascalientes.</span>
+    <a href="https://github.com/Bennett-mtz/mociba-visualizacion">Código y datos</a>
+  </footer>
+</main>
+
+<script>/*__PLOTLYJS__*/</script>
+<script>
+const D = /*__DATOS__*/null;
+const ENT = Object.fromEntries(D.entidades.map(e => [e.cve, e]));
+const state = { anio: D.anios[D.anios.length - 1], dom: "T", ent: "00", vista: "ejecutiva" };
+const DOMS = [["T", "Todas"], ["U", "Urbana"], ["R", "Rural"]];
+const DOM_TXT = { T: "", U: " · zonas urbanas", R: " · zonas rurales" };
+
+const get = (a, d, e, s, g) => D.prev[`${a}|${d}|${e}|${s}|${g}`] || null;
+const f1 = v => (v == null || isNaN(v)) ? "–" : v.toFixed(1);
+const pct = v => f1(v) + "\u00a0%";
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const tecnica = () => state.vista === "tecnica";
+const lugar = () => state.ent === "00" ? "Nacional" : ENT[state.ent].nombre;
+const poco = r => r && r[4] != null && r[4] > 30;
+const precision = r => !r || r[4] == null ? "" : r[4] <= 15 ? "precisión alta" : r[4] <= 30 ? "precisión moderada" : "precisión baja (usar con cautela)";
+const personas = n => n >= 1e6 ? `${(n / 1e6).toFixed(1)} millones` : n >= 1e3 ? `${Math.round(n / 1e3).toLocaleString("es-MX")} mil` : n.toLocaleString("es-MX");
+
+/* ---------- controles ---------- */
+function seg(id, items, key, numeric) {
+  const el = document.getElementById(id);
+  el.innerHTML = "";
+  items.forEach(([v, t]) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = t;
+    b.setAttribute("aria-pressed", String(state[key] === v));
+    b.onclick = () => { state[key] = v; render(); };
+    el.appendChild(b);
+  });
+}
+const sel = document.getElementById("f-ent");
+sel.innerHTML = `<option value="00">Nacional</option>` +
+  [...D.entidades].sort((a, b) => a.nombre.localeCompare(b.nombre, "es")).map(e => `<option value="${e.cve}">${e.nombre}</option>`).join("");
+sel.onchange = () => { state.ent = sel.value; render(); };
+document.getElementById("reset").onclick = () => { Object.assign(state, { anio: D.anios[D.anios.length - 1], dom: "T", ent: "00" }); render(); };
+
+/* ---------- base de estilo para Plotly (minimalista: sin barra de herramientas, rejilla tenue) ---------- */
+function baseLayout(extra) {
+  const ink2 = css("--ink2"), grid = css("--grid"), muted = css("--muted");
+  return Object.assign({
+    margin: { l: 8, r: 12, t: 8, b: 30 }, paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
+    font: { family: "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", size: 12.5, color: ink2 },
+    showlegend: false, hovermode: "closest",
+    hoverlabel: { bgcolor: css("--panel"), bordercolor: css("--line"), font: { color: css("--ink"), size: 13 }, align: "left" },
+    xaxis: { gridcolor: grid, zeroline: false, linecolor: grid, tickcolor: grid, tickfont: { color: muted }, fixedrange: true },
+    yaxis: { gridcolor: grid, zeroline: false, linecolor: grid, tickfont: { color: ink2 }, fixedrange: true, automargin: true },
+  }, extra || {});
+}
+const CFG = { displayModeBar: false, responsive: true };
+
+/* ---------- 1. tarjeta principal ---------- */
+function hero() {
+  const { anio, dom, ent } = state;
+  const r = get(anio, dom, ent, "T", "T"), m = get(anio, dom, ent, "M", "T"), h = get(anio, dom, ent, "H", "T");
+  document.getElementById("h-scope").textContent = `${lugar()} · ${anio}${DOM_TXT[dom]}`;
+  document.getElementById("h-big").innerHTML = r ? `${f1(r[0])}<small> %</small>` : "–";
+  document.getElementById("h-phrase").textContent = r ? `1 de cada ${Math.round(100 / r[0])} personas usuarias de internet` : "";
+  document.getElementById("h-ctx").textContent = r ? `vivió ciberacoso en el último año: unas ${personas(r[6])} de personas.` : "";
+  document.getElementById("h-m").textContent = m ? pct(m[0]) : "–";
+  document.getElementById("h-h").textContent = h ? pct(h[0]) : "–";
+  // cambio contra el año anterior (muestras independientes)
+  const i = D.anios.indexOf(anio), yoy = document.getElementById("h-yoy");
+  if (i > 0 && r) {
+    const p = get(D.anios[i - 1], dom, ent, "T", "T");
+    if (D.cuestionario[D.anios[i - 1]] !== D.cuestionario[anio]) {
+      yoy.textContent = `Contra ${D.anios[i - 1]}: no comparable (cambió el cuestionario).`;
+    } else if (p) {
+      const d = r[0] - p[0], se = Math.hypot((r[2] - r[1]) / 3.92, (p[2] - p[1]) / 3.92), sig = Math.abs(d) > 1.96 * se;
+      yoy.textContent = `Contra ${D.anios[i - 1]}: ${Math.abs(d) < 0.05 ? "" : d > 0 ? "+" : "−"}${f1(Math.abs(d))} puntos · ${sig ? (d > 0 ? "aumento significativo" : "disminución significativa") : "sin cambio significativo"}.`;
+    }
+  } else yoy.textContent = "Primer año de la serie.";
+  let pk = null;
+  D.edades.forEach(g => ["M", "H"].forEach(s => { const x = get(anio, dom, ent, s, g); if (x && !poco(x) && (!pk || x[0] > pk.x[0])) pk = { g, s, x }; }));
+  document.getElementById("h-peak").innerHTML = pk ? `Grupo más afectado: <b>${pk.s === "M" ? "mujeres" : "hombres"} de ${pk.g === "60 y más" ? "60 años y más" : pk.g.replace("–", " a ") + " años"}, ${pct(pk.x[0])}</b>` : "";
+  const b = D.brecha[`${anio}|${dom}|${ent}`];
+  document.getElementById("h-tech").innerHTML = r ?
+    `IC 95 %: ${f1(r[1])}–${f1(r[2])} % · n = ${r[3].toLocaleString("es-MX")} · CV ${f1(r[4])} % (${precision(r)})<br>` +
+    (b ? `Brecha M − H: ${f1(b[0])} pts (IC ${f1(b[1])} a ${f1(b[2])}) · ${b[1] > 0 || b[2] < 0 ? "significativa" : "no significativa"}` : "") : "";
+}
+
+/* ---------- 2. serie 2019–2025 ---------- */
+function serie() {
+  const { dom, ent, anio } = state, A = D.anios;
+  const cM = css("--muj"), cH = css("--hom"), ink = css("--ink"), muted = css("--muted");
+  const traces = [], ann = [];
+  [["H", cH, "Hombres", css("--band-h")], ["M", cM, "Mujeres", css("--band-m")]].forEach(([s, c, name, band]) => {
+    const rows = A.map(a => get(a, dom, ent, s, "T"));
+    if (tecnica()) {
+      traces.push({ x: [...A, ...[...A].reverse()], y: [...rows.map(r => r && r[2]), ...[...rows].reverse().map(r => r && r[1])],
+        fill: "toself", fillcolor: band, line: { width: 0 }, hoverinfo: "skip", type: "scatter", mode: "lines" });
+    }
+    // 2019 → 2020 punteado (cuestionario distinto)
+    traces.push({ x: A.slice(0, 2), y: rows.slice(0, 2).map(r => r && r[0]), type: "scatter", mode: "lines",
+      line: { color: c, width: 2, dash: "dot" }, hoverinfo: "skip" });
+    traces.push({ x: A.slice(1), y: rows.slice(1).map(r => r && r[0]), type: "scatter", mode: "lines",
+      line: { color: c, width: 2.5 }, hoverinfo: "skip" });
+    traces.push({ x: A, y: rows.map(r => r && r[0]), type: "scatter", mode: "markers", name,
+      marker: { color: A.map(a => a === anio ? c : css("--panel")), size: A.map(a => a === anio ? 11 : 8),
+                line: { color: c, width: 2 } },
+      customdata: rows.map(r => r ? [f1(r[1]), f1(r[2]), r[3].toLocaleString("es-MX"), precision(r)] : ["", "", "", ""]),
+      hovertemplate: `<b>${name} %{x}</b><br>%{y:.1f} %` + (tecnica() ? "<br>IC 95 %: %{customdata[0]}–%{customdata[1]} %<br>n = %{customdata[2]} · %{customdata[3]}" : "") + "<extra></extra>" });
+    const last = rows[rows.length - 1];
+    if (last) ann.push({ x: A[A.length - 1], y: last[0], xanchor: "left", xshift: 10, showarrow: false,
+      text: `<b>${name}</b> ${pct(last[0])}`, font: { color: ink, size: 12.5 } });
+  });
+  const rng = A.slice(1).map(a => get(a, dom, ent, "T", "T")).filter(Boolean).map(r => r[0]);
+  const lo = Math.min(...rng), hi = Math.max(...rng);
+  document.getElementById("t-serie").textContent = (hi - lo) < 3
+    ? `Desde 2020 no baja: se mantiene entre ${f1(lo)} % y ${f1(hi)} %, y las mujeres siempre van por arriba`
+    : `Desde 2020 se ha movido entre ${f1(lo)} % y ${f1(hi)} %`;
+  const ymax = Math.max(35, ...A.map(a => [get(a, dom, ent, "M", "T"), get(a, dom, ent, "H", "T")]).flat().filter(Boolean).map(r => (tecnica() ? r[2] : r[0]) + 4));
+  Plotly.react("ch-serie", traces, baseLayout({
+    margin: { l: 8, r: 120, t: 8, b: 30 },
+    xaxis: Object.assign(baseLayout().xaxis, { tickvals: A, ticktext: A.map(a => window.innerWidth < 560 ? "’" + String(a).slice(2) : String(a)), range: [A[0] - .3, A[A.length - 1] + .2], showgrid: false }),
+    yaxis: Object.assign(baseLayout().yaxis, { range: [0, ymax], ticksuffix: " %", dtick: 10 }),
+    shapes: [{ type: "rect", xref: "x", yref: "paper", x0: A[0] - .3, x1: A[0] + .5, y0: 0, y1: 1, fillcolor: css("--chip"), opacity: .6, line: { width: 0 }, layer: "below" }],
+    annotations: [...ann, { x: A[0] + .1, y: 1, yref: "paper", yanchor: "top", showarrow: false, align: "center",
+      text: "cuestionario<br>distinto", font: { size: 11, color: muted } }],
+  }), CFG);
+}
+
+/* ---------- dumbbell (edad y situaciones) ---------- */
+function dumbbell(div, cats, labels, M, H, opts) {
+  const cM = css("--muj"), cH = css("--hom"), cL = css("--link");
+  const xs = [], ys = [];
+  cats.forEach((c, i) => { if (M[i] && H[i]) { xs.push(H[i][0], M[i][0], null); ys.push(c, c, null); } });
+  const errs = arr => tecnica() ? { type: "data", symmetric: false, array: arr.map(r => r ? r[2] - r[0] : 0),
+      arrayminus: arr.map(r => r ? r[0] - r[1] : 0), thickness: 1.2, width: 3 } : undefined;
+  const pts = (arr, color, name) => ({
+    x: arr.map(r => r ? r[0] : null), y: cats, type: "scatter", mode: "markers", name,
+    marker: { size: 11, color: arr.map(r => poco(r) ? css("--panel") : color), line: { color, width: 2 } },
+    error_x: Object.assign(errs(arr) || { visible: false }, { color }),
+    opacity: 1,
+    customdata: arr.map((r, i) => [labels[i], r ? f1(r[1]) : "", r ? f1(r[2]) : "", r && r[3] ? r[3].toLocaleString("es-MX") : "", precision(r)]),
+    hovertemplate: `<b>%{customdata[0]}</b><br>${name}: %{x:.1f} %` +
+      (tecnica() ? "<br>IC 95 %: %{customdata[1]}–%{customdata[2]} %" + (opts.n ? "<br>n = %{customdata[3]} · %{customdata[4]}" : "") : "") + "<extra></extra>",
+  });
+  const xmax = Math.max(...[...M, ...H].filter(Boolean).map(r => tecnica() ? r[2] : r[0])) * 1.15 + 1;
+  Plotly.react(div, [
+    { x: xs, y: ys, type: "scatter", mode: "lines", line: { color: cL, width: 3 }, hoverinfo: "skip" },
+    pts(H, cH, "Hombres"), pts(M, cM, "Mujeres"),
+  ], baseLayout({
+    margin: { l: 8, r: 16, t: 4, b: 30 },
+    xaxis: Object.assign(baseLayout().xaxis, { range: [0, xmax], ticksuffix: " %", zeroline: false }),
+    yaxis: Object.assign(baseLayout().yaxis, { type: "category", categoryorder: "array", categoryarray: [...cats].reverse(),
+      tickvals: cats, ticktext: labels, showgrid: false, ticks: "", ticklen: 6, tickcolor: "rgba(0,0,0,0)" }),
+    annotations: opts.ann || [],
+  }), CFG);
+}
+
+/* ---------- 3. edad × sexo ---------- */
+function edad() {
+  const { anio, dom, ent } = state, E = D.edades;
+  const M = E.map(g => get(anio, dom, ent, "M", g)), H = E.map(g => get(anio, dom, ent, "H", g));
+  let best = null;
+  E.forEach((g, i) => [["mujeres", M[i]], ["hombres", H[i]]].forEach(([s, r]) => { if (r && !poco(r) && (!best || r[0] > best.r[0])) best = { g, s, r }; }));
+  const ann = best ? [{ x: best.r[0], y: best.g, xanchor: "left", xshift: 12, showarrow: false,
+    text: `<b>${pct(best.r[0])}</b>`, font: { color: css("--ink"), size: 13 } }] : [];
+  const cierra = [4, 5].every(i => M[i] && H[i] && Math.abs(M[i][0] - H[i][0]) < 2.5) && [0, 1].some(i => M[i] && H[i] && M[i][0] - H[i][0] > 3);
+  document.getElementById("t-edad").textContent = best
+    ? `El grupo más afectado: ${best.s} de ${best.g === "60 y más" ? "60 años y más" : best.g.replace("–", " a ") + " años"} (${pct(best.r[0])})${cierra ? "; la brecha se cierra después de los 50" : ""}`
+    : "Prevalencia por edad y sexo";
+  const pocos = [...M, ...H].filter(poco).length;
+  const w = document.getElementById("w-edad");
+  w.textContent = pocos ? `${pocos} estimación(es) con muestra pequeña (punto hueco): interprétalas con cautela.` : "";
+  w.classList.toggle("show", pocos > 0);
+  dumbbell("ch-edad", E, E.map(g => g === "60 y más" ? "60 y más" : `${g} años`), M, H, { ann, n: true });
+}
+
+/* ---------- 4. situaciones (2025) ---------- */
+function situ() {
+  const { dom, ent } = state;
+  const M = D.situ[`${dom}|${ent}|M`], H = D.situ[`${dom}|${ent}|H`];
+  const idx = D.situaciones.map((s, i) => i).filter(i => D.situaciones[i] !== "Otra situación" && M && M[i] && H && H[i]);
+  idx.sort((a, b) => M[b][0] - M[a][0]);
+  const cats = idx.map(i => D.situaciones[i]);
+  const sex = new Set(D.sexuales);
+  const ink = css("--ink"), muted = css("--muted");
+  const labels = cats.map(c => sex.has(c) ? `<b><span style="color:${ink}">${c}</span></b>` : `<span style="color:${muted}">${c}</span>`);
+  const k = D.situaciones.indexOf("Insinuaciones o propuestas sexuales");
+  const ratio = M && H && H[k] && M[k] && !poco(M[k]) && !poco(H[k]) && H[k][0] > 0 ? M[k][0] / H[k][0] : null;
+  document.getElementById("t-situ").textContent = ratio && ratio > 1.3
+    ? `La diferencia está en el acoso sexual: las insinuaciones o propuestas sexuales son ${ratio.toFixed(1)} veces más frecuentes en mujeres`
+    : "Situaciones de ciberacoso por sexo" + (M && H && idx.some(i => poco(M[i]) || poco(H[i])) ? " (muestra pequeña: varias cifras son poco confiables)" : "");
+  const w = document.getElementById("w-situ");
+  w.textContent = state.anio !== 2025 ? `El detalle por tipo de situación corresponde a 2025 (el año seleccionado arriba no aplica a este panel).` : "";
+  w.classList.toggle("show", state.anio !== 2025);
+  const Mi = idx.map(i => M[i]), Hi = idx.map(i => H[i]);
+  const ann = [];
+  cats.forEach((c, j) => { if (sex.has(c)) ann.push({ x: Math.max(Mi[j][0], Hi[j][0]), y: c, xanchor: "left", xshift: 12, showarrow: false,
+    text: `${f1(Mi[j][0])} vs ${f1(Hi[j][0])}`, font: { size: 11.5, color: ink } }); });
+  dumbbell("ch-situ", cats, labels, Mi, Hi, { ann, n: false });
+}
+
+/* ---------- 5. ranking de entidades ---------- */
+function ranking() {
+  const { anio, dom, ent } = state;
+  const nac = get(anio, dom, "00", "T", "T");
+  const rows = D.entidades.map(e => ({ e, r: get(anio, dom, e.cve, "T", "T"), v: D.vsnac[`${anio}|${dom}|${e.cve}`] }))
+    .filter(o => o.r).sort((a, b) => b.r[0] - a.r[0]);
+  const cls = o => !o.v ? "ns" : o.v[1] > 0 ? "up" : o.v[2] < 0 ? "down" : "ns";
+  const color = { up: css("--up"), down: css("--down"), ns: css("--ns") };
+  const nUp = rows.filter(o => cls(o) === "up").length, nDown = rows.filter(o => cls(o) === "down").length;
+  const tops = rows.filter(o => cls(o) === "up").slice(0, 3).map(o => o.e.nombre);
+  const ent_ = n => n === 1 ? "1 entidad está" : `${n} entidades están`;
+  document.getElementById("t-rank").textContent = nUp
+    ? `${ent_(nUp)} por arriba del promedio nacional (${tops.join(", ")}${nUp > 3 ? "…" : ""}) y ${nDown} por debajo; en las demás la diferencia cabe en el margen de error`
+    : `Ninguna entidad se distingue del promedio nacional con certeza estadística`;
+  const ink = css("--ink");
+  const trace = {
+    x: rows.map(o => o.e.abrev), y: rows.map(o => o.r[0]), type: "bar",
+    marker: { color: rows.map(o => color[cls(o)]), line: { color: rows.map(o => o.e.cve === ent ? ink : "rgba(0,0,0,0)"), width: 2 },
+              cornerradius: 4 },
+    opacity: 1,
+    error_y: tecnica() ? { type: "data", symmetric: false, array: rows.map(o => o.r[2] - o.r[0]), arrayminus: rows.map(o => o.r[0] - o.r[1]),
+      color: css("--muted"), thickness: 1.2, width: 3 } : { visible: false },
+    customdata: rows.map(o => [o.e.nombre, f1(o.r[1]), f1(o.r[2]), o.r[3].toLocaleString("es-MX"),
+      o.v ? `${o.v[0] >= 0 ? "+" : "−"}${f1(Math.abs(o.v[0]))} pts vs nacional` : "",
+      { up: "Por arriba del nacional", down: "Por debajo del nacional", ns: "Sin diferencia significativa" }[cls(o)], o.e.cve]),
+    hovertemplate: "<b>%{customdata[0]}</b><br>%{y:.1f} % · %{customdata[5]}" +
+      (tecnica() ? "<br>IC 95 %: %{customdata[1]}–%{customdata[2]} %<br>%{customdata[4]} · n = %{customdata[3]}" : "") + "<extra></extra>",
+  };
+  const ymax = Math.max(...rows.map(o => tecnica() ? o.r[2] : o.r[0])) + 4;
+  const small = window.innerWidth < 560;
+  if (small) {   // en pantallas angostas el ranking se dibuja horizontal
+    trace.y = rows.map(o => o.e.abrev); trace.x = rows.map(o => o.r[0]); trace.orientation = "h";
+    trace.hovertemplate = trace.hovertemplate.replace("%{y:.1f}", "%{x:.1f}");
+    if (tecnica()) { trace.error_x = Object.assign({}, trace.error_y); } trace.error_y = { visible: false };
+  }
+  const lay = baseLayout({
+    margin: small ? { l: 8, r: 16, t: 20, b: 24 } : { l: 8, r: 8, t: 20, b: 30 }, bargap: .32,
+    shapes: [small
+      ? { type: "line", yref: "paper", y0: 0, y1: 1, x0: nac[0], x1: nac[0], line: { color: ink, width: 1.5, dash: "dash" } }
+      : { type: "line", xref: "paper", x0: 0, x1: 1, y0: nac[0], y1: nac[0], line: { color: ink, width: 1.5, dash: "dash" } }],
+    annotations: [small
+      ? { x: nac[0], y: 1, yref: "paper", yanchor: "bottom", showarrow: false, text: `Nacional ${pct(nac[0])}`, font: { color: ink, size: 12 } }
+      : { x: 1, xref: "paper", y: nac[0], yanchor: "bottom", xanchor: "right", showarrow: false, text: `<b>Nacional ${pct(nac[0])}</b>`, font: { color: ink, size: 12.5 } }],
+  });
+  if (small) {
+    lay.yaxis = Object.assign(lay.yaxis, { type: "category", categoryorder: "array", categoryarray: [...trace.y].reverse(), showgrid: false });
+    lay.xaxis = Object.assign(lay.xaxis, { range: [0, ymax], ticksuffix: " %" });
+  } else {
+    lay.xaxis = Object.assign(lay.xaxis, { type: "category", showgrid: false, tickfont: { color: css("--ink2"), size: 11.5 },
+      tickvals: rows.map(o => o.e.abrev), ticktext: rows.map(o => o.e.cve === ent ? `<b>${o.e.abrev}</b>` : o.e.abrev) });
+    lay.yaxis = Object.assign(lay.yaxis, { range: [0, ymax], ticksuffix: " %", dtick: 10 });
+  }
+  const div = document.getElementById("ch-rank");
+  Plotly.react(div, [trace], lay, CFG);
+  if (!div._clic) {
+    div.on("plotly_click", ev => { const c = ev.points[0].customdata[6]; state.ent = state.ent === c ? "00" : c; render(); });
+    div._clic = true;
+  }
+}
+
+/* ---------- nota metodológica ---------- */
+function metodo() {
+  const r = get(state.anio, state.dom, state.ent, "T", "T");
+  document.getElementById("metodo").innerHTML = [
+    `Unidad de análisis: persona de 12 años y más que usó internet (una por hogar seleccionado). Muestra ${state.anio}: n = ${get(state.anio, "T", "00", "T", "T")[3].toLocaleString("es-MX")} personas.`,
+    "Todas las cifras están ponderadas con el factor de expansión (<code>FACTOR</code>) y reproducen la cifra oficial del INEGI (20.4 % en 2025).",
+    "Intervalos de confianza al 95 % por linealización de Taylor con el diseño estratificado por conglomerados (estrato <code>EST_DIS</code>, UPM <code>UPM_DIS</code>).",
+    "Comparación entre años: diferencia de muestras independientes. Entidad vs nacional y mujeres vs hombres: diferencia de variables linealizadas (incluye covarianza).",
+    "Coeficiente de variación: ≤ 15 % precisión alta, 15–30 % moderada, &gt; 30 % baja (criterio del INEGI); las de precisión baja se marcan con punto hueco.",
+    "Limitaciones: diseño transversal (no sigue a las mismas personas), victimización autorreportada, un informante por hogar y cambio de cuestionario en 2019 (10 situaciones) frente a años posteriores (13).",
+  ].map(t => `<li>${t}</li>`).join("");
+}
+
+/* ---------- render ---------- */
+function render() {
+  seg("f-anio", D.anios.map(a => [a, String(a)]), "anio");
+  seg("f-dom", DOMS, "dom");
+  seg("f-vista", [["ejecutiva", "Ejecutiva"], ["tecnica", "Técnica"]], "vista");
+  sel.value = state.ent;
+  document.body.classList.toggle("tecnica", tecnica());
+  hero(); serie(); edad(); situ(); ranking(); metodo();
+}
+render();
+window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", render);
+let rz; window.addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(ranking, 150); });
+</script>
+</body>
+</html>

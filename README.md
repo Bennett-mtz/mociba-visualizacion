@@ -12,6 +12,7 @@ Autor: **Ing. Raymundo Bennett Martínez Terán** · Docente: Ricardo Emmanuel R
 
 ## Ver en línea (sin instalar nada)
 
+- **Dashboard final:** https://bennett-mtz.github.io/mociba-visualizacion/dashboard/
 - Visualización interactiva: https://bennett-mtz.github.io/mociba-visualizacion/figures/avance3/V2_interactiva_mapa_ranking_entidades.html
 - Notebook ejecutado: https://bennett-mtz.github.io/mociba-visualizacion/notebooks/MOCIBA_proyecto.html
 
@@ -52,7 +53,10 @@ mociba-visualizacion/
 │   └── MOCIBA_proyecto.py     mismo notebook en formato texto (diff legible en Git)
 ├── src/
 │   ├── mociba.py            carga, limpieza, estimadores con IC, paleta y catálogos
+│   ├── dashboard.py         genera dashboard/index.html (estimaciones con IC + Plotly.js)
+│   ├── plantilla_dashboard.html  plantilla del dashboard final
 │   └── plantilla_interactiva.html  plantilla de la visualización interactiva (Plotly.js)
+├── dashboard/index.html     dashboard final (un solo archivo, funciona sin conexión)
 ├── figures/
 │   ├── avance2/             F1–F6: visualizaciones exploratorias (Avance 2)
 │   └── avance3/             V1 estática mejorada, V2 interactiva (.html), V3 capturas de Power BI
@@ -83,6 +87,7 @@ descargar nada más ni editar rutas: todo es relativo a la raíz del repositorio
 | `figures/avance2/F1…F6_*.png` | matplotlib | EDA: formas de acoso, situación × edad, edad × sexo × localidad, serie 2019–2025, mapa de mosaicos, IC por entidad |
 | `figures/avance3/V1_estatica_serie_brecha_sexo.png` | matplotlib | F4 mejorada: brecha mujeres − hombres anotada año por año con su IC |
 | `figures/avance3/V2_interactiva_mapa_ranking_entidades.html` | Plotly.js | F5 + F6 interactivas: selector de año y grupo, hover con detalle, clic para ver la evolución de cada entidad. Abrir en cualquier navegador (funciona sin conexión) |
+| `dashboard/index.html` · `src/dashboard.py` | Python + Plotly.js | **Dashboard final:** insight principal, tendencia 2019–2025, edad × sexo, tipo de situación y ranking de entidades con significancia; filtros de año, localidad y entidad, filtro cruzado por clic y vista ejecutiva/técnica. Regenerar con `python src/dashboard.py` |
 | `figures/avance3/V3_powerbi_*.png` · `powerbi/GUIA_POWER_BI.md` | Power BI (servicio web) | Tablero con KPIs, segmentadores, filtro cruzado e información sobre herramientas personalizada |
 
 ## Referencias de software
